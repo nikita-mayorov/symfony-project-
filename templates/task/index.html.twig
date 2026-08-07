@@ -8,9 +8,41 @@
     <a href="{{ path('app_task_new') }}" class="btn btn-primary">New Task</a>
 </div>
 
-{% if tasks is empty %}
+<form method="get" class="row g-3 mb-4">
+    <div class="col-auto">
+        <select name="status" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="todo"{{ filterStatus is not null and filterStatus.value == 'todo' ? ' selected' : '' }}>Todo</option>
+            <option value="in_progress"{{ filterStatus is not null and filterStatus.value == 'in_progress' ? ' selected' : '' }}>In Progress</option>
+            <option value="done"{{ filterStatus is not null and filterStatus.value == 'done' ? ' selected' : '' }}>Done</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="priority" class="form-select">
+            <option value="">All Priorities</option>
+            <option value="low"{{ filterPriority is not null and filterPriority.value == 'low' ? ' selected' : '' }}>Low</option>
+            <option value="medium"{{ filterPriority is not null and filterPriority.value == 'medium' ? ' selected' : '' }}>Medium</option>
+            <option value="high"{{ filterPriority is not null and filterPriority.value == 'high' ? ' selected' : '' }}>High</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+    </div>
+    {% if filterStatus or filterPriority %}
+    <div class="col-auto">
+        <a href="{{ path('app_task_index') }}" class="btn btn-outline-danger">Clear</a>
+    </div>
+    {% endif %}
+</form>
+
+{% if items is empty %}
     <div class="text-center py-5">
-        <p class="text-muted">No tasks yet. <a href="{{ path('app_task_new') }}">Create your first task</a>.</p>
+        {% if filterStatus or filterPriority %}
+            <p class="text-muted">No tasks match this filter.</p>
+            <a href="{{ path('app_task_index') }}" class="btn btn-outline-secondary">Clear Filters</a>
+        {% else %}
+            <p class="text-muted">No tasks yet. <a href="{{ path('app_task_new') }}">Create your first task</a>.</p>
+        {% endif %}
     </div>
 {% else %}
     <div class="table-responsive">
@@ -25,12 +57,17 @@
                 </tr>
             </thead>
             <tbody>
-            {% for task in tasks %}
-                <tr>
+            {% set today = date() %}
+            {% for task in items %}
+                {% set overdue = task.dueDate and task.dueDate < today and task.status.value != 'done' %}
+                <tr class="{{ overdue ? 'table-danger' : '' }}">
                     <td>
                         <a href="{{ path('app_task_show', {id: task.id}) }}">
                             {{ task.title }}
                         </a>
+                        {% if overdue %}
+                            <span class="badge bg-danger ms-1">Overdue</span>
+                        {% endif %}
                     </td>
                     <td>
                         <span class="badge bg-{{ task.status.value == 'done' ? 'success' : task.status.value == 'in_progress' ? 'warning' : 'secondary' }}">
@@ -50,6 +87,11 @@
             {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">{{ total }} task{{ total != 1 ? 's' : '' }}</small>
+        {{ include('task/_pagination.html.twig') }}
     </div>
 {% endif %}
 {% endblock %}

@@ -231,4 +231,58 @@ final class TaskControllerTest extends WebTestCase
 
         $this->assertResponseRedirects('/login');
     }
+
+    public function testFilterByStatus(): void
+    {
+        $user = $this->createVerifiedUser('filter@test.com', 'password');
+        $this->createTask($user, 'Todo Task');
+        $task = new Task();
+        $task->setTitle('Done Task');
+        $task->setOwner($user);
+        $task->setStatus(\App\Domain\Enum\TaskStatus::Done);
+        $taskRepository = static::getContainer()->get(TaskRepositoryInterface::class);
+        $taskRepository->save($task);
+
+        $this->loginUser($user);
+        $crawler = $this->client->request('GET', '/tasks?status=done');
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('table', 'Done Task');
+        $this->assertSelectorTextNotContains('table', 'Todo Task');
+    }
+
+    public function testFilterByPriority(): void
+    {
+        $user = $this->createVerifiedUser('filterprio@test.com', 'password');
+        $this->createTask($user, 'Low Task');
+        $task = new Task();
+        $task->setTitle('High Task');
+        $task->setOwner($user);
+        $task->setPriority(\App\Domain\Enum\TaskPriority::High);
+        $taskRepository = static::getContainer()->get(TaskRepositoryInterface::class);
+        $taskRepository->save($task);
+
+        $this->loginUser($user);
+        $crawler = $this->client->request('GET', '/tasks?priority=high');
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('table', 'High Task');
+        $this->assertSelectorTextNotContains('table', 'Low Task');
+    }
+
+    public function testPagination(): void
+    {
+        $user = $this->createVerifiedUser('pagination@test.com', 'password');
+
+        for ($i = 1; $i <= 12; ++$i) {
+            $this->createTask($user, "Task {$i}");
+        }
+
+        $this->loginUser($user);
+        $crawler = $this->client->request('GET', '/tasks?page=1');
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('.pagination', '1');
+        $this->assertSelectorTextContains('.pagination', 'Next');
+    }
 }

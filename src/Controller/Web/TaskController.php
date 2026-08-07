@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller\Web;
 
 use App\Application\TaskService;
+use App\Domain\Enum\TaskPriority;
+use App\Domain\Enum\TaskStatus;
 use App\Domain\Exception\TaskAccessDeniedException;
 use App\Entity\Task;
 use App\Entity\User;
@@ -18,19 +20,32 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 final class TaskController extends AbstractController
 {
+    private const PER_PAGE = 10;
+
     public function __construct(
         private readonly TaskService $taskService,
     ) {
     }
 
     #[Route('/tasks', name: 'app_task_index', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
 
+        $page = max(1, (int) $request->query->get('page', '1'));
+        $status = $this->parseStatus($request->query->get('status'));
+        $priority = $this->parsePriority($request->query->get('priority'));
+
+        $result = $this->taskService->listPaginated($user, $page, self::PER_PAGE, $status, $priority);
+
         return $this->render('task/index.html.twig', [
-            'tasks' => $this->taskService->list($user),
+            'items' => $result['items'],
+            'total' => $result['total'],
+            'page' => $result['page'],
+            'pages' => $result['pages'],
+            'filterStatus' => $status,
+            'filterPriority' => $priority,
         ]);
     }
 
@@ -119,5 +134,23 @@ final class TaskController extends AbstractController
         }
 
         return $this->redirectToRoute('app_task_index');
+    }
+
+    private function parseStatus(mixed $value): ?TaskStatus
+    {
+        if (!is_string($value) || '' === $value) {
+            return null;
+        }
+
+        return TaskStatus::tryFrom($value);
+    }
+
+    private function parsePriority(mixed $value): ?TaskPriority
+    {
+        if (!is_string($value) || '' === $value) {
+            return null;
+        }
+
+        return TaskPriority::tryFrom($value);
     }
 }

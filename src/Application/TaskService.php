@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application;
 
+use App\Domain\Enum\TaskPriority;
+use App\Domain\Enum\TaskStatus;
 use App\Domain\Exception\TaskAccessDeniedException;
 use App\Domain\Repository\TaskRepositoryInterface;
 use App\Entity\Task;
@@ -22,6 +24,14 @@ final class TaskService
     public function list(User $user): array
     {
         return $this->taskRepository->findByUser($user);
+    }
+
+    /**
+     * @return array{items: list<Task>, total: int, page: int, pages: int}
+     */
+    public function listPaginated(User $user, int $page, int $limit, ?TaskStatus $status = null, ?TaskPriority $priority = null): array
+    {
+        return $this->taskRepository->findByUserPaginated($user, $page, $limit, $status, $priority);
     }
 
     public function create(Task $task, User $owner): Task
@@ -72,9 +82,9 @@ final class TaskService
 
         foreach ($tasks as $task) {
             match ($task->getStatus()) {
-                \App\Domain\Enum\TaskStatus::Todo => $todo++,
-                \App\Domain\Enum\TaskStatus::InProgress => $inProgress++,
-                \App\Domain\Enum\TaskStatus::Done => $done++,
+                TaskStatus::Todo => $todo++,
+                TaskStatus::InProgress => $inProgress++,
+                TaskStatus::Done => $done++,
             };
         }
 
