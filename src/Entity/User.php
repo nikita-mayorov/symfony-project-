@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -24,6 +25,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Email(mode: 'strict')]
     private string $email;
 
     #[ORM\Column(type: 'string')]
@@ -40,6 +43,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
+
+    #[ORM\Column(type: 'string', length: 6, nullable: true)]
+    private ?string $verificationCode = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $verificationCodeExpiresAt = null;
 
     public function __construct()
     {
@@ -58,7 +70,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setEmail(string $email): self
     {
-        $this->email = $email;
+        $this->email = mb_strtolower($email);
 
         return $this;
     }
@@ -103,6 +115,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): self
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function getVerificationCode(): ?string
+    {
+        return $this->verificationCode;
+    }
+
+    public function setVerificationCode(?string $verificationCode): self
+    {
+        $this->verificationCode = $verificationCode;
+
+        return $this;
+    }
+
+    public function getVerificationCodeExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->verificationCodeExpiresAt;
+    }
+
+    public function setVerificationCodeExpiresAt(?\DateTimeImmutable $verificationCodeExpiresAt): self
+    {
+        $this->verificationCodeExpiresAt = $verificationCodeExpiresAt;
+
+        return $this;
     }
 
     #[ORM\PrePersist]

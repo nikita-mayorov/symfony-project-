@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 
 class RegistrationType extends AbstractType
 {
@@ -25,6 +26,9 @@ class RegistrationType extends AbstractType
                 'first_options' => ['label' => 'Password'],
                 'second_options' => ['label' => 'Repeat Password'],
                 'mapped' => false,
+                'constraints' => [
+                    new Length(min: 8, minMessage: 'Password must be at least {{ limit }} characters long.'),
+                ],
             ])
         ;
     }

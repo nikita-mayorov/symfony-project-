@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Web;
 
+use App\Application\EmailVerificationService;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Entity\User;
 use App\Form\RegistrationType;
@@ -37,6 +38,7 @@ class SecurityController extends AbstractController
         Request $request,
         UserRepositoryInterface $userRepository,
         UserPasswordHasherInterface $passwordHasher,
+        EmailVerificationService $verificationService,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_dashboard');
@@ -51,9 +53,11 @@ class SecurityController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
             $userRepository->save($user);
 
-            $this->addFlash('success', 'Registration successful. Please log in.');
+            $verificationService->sendVerificationCode($user);
 
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('app_verify_email', [
+                'email' => $user->getEmail(),
+            ]);
         }
 
         return $this->render('security/register.html.twig', [
