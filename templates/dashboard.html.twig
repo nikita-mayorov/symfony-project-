@@ -50,4 +50,15 @@
     <a href="{{ path('app_task_new') }}" class="btn btn-primary btn-lg">Create Your First Task</a>
 </div>
 {% endif %}
+
+<div class="card mt-4">
+    <div class="card-header">API Access</div>
+    <div class="card-body">
+        <p class="mb-2">Use this token to authenticate API requests:</p>
+        <code class="user-select-all">{{ app.user.apiToken }}</code>
+        <p class="mt-2 mb-0 text-muted small">
+            Include in requests as <code>Authorization: Bearer {{ app.user.apiToken }}</code>
+        </p>
+    </div>
+</div>
 {% endblock %}

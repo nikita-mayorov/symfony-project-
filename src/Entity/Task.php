@@ -8,6 +8,7 @@ use App\Domain\Enum\TaskPriority;
 use App\Domain\Enum\TaskStatus;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\Table(name: 'task')]
@@ -17,32 +18,41 @@ class Task
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['task:read'])]
     /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['task:read', 'task:write'])]
     private string $title;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['task:read', 'task:write'])]
     private ?string $description = null;
 
     #[ORM\Column(type: 'string', length: 20, enumType: TaskStatus::class)]
+    #[Groups(['task:read', 'task:write'])]
     private TaskStatus $status;
 
     #[ORM\Column(type: 'string', length: 20, enumType: TaskPriority::class)]
+    #[Groups(['task:read', 'task:write'])]
     private TaskPriority $priority;
 
     #[ORM\Column(type: 'date_immutable', nullable: true)]
+    #[Groups(['task:read', 'task:write'])]
     private ?\DateTimeImmutable $dueDate = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
+    #[Groups(['task:read'])]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
+    #[Groups(['task:read'])]
     private \DateTimeImmutable $updatedAt;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['task:read'])]
     private User $owner;
 
     public function __construct()

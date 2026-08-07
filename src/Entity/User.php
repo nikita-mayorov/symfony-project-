@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -21,12 +22,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['task:read'])]
     /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Email(mode: 'strict')]
+    #[Groups(['task:read'])]
     private string $email;
 
     #[ORM\Column(type: 'string')]
@@ -53,9 +56,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $verificationCodeExpiresAt = null;
 
+    #[ORM\Column(type: 'string', length: 64, nullable: true, unique: true)]
+    private ?string $apiToken = null;
+
     public function __construct()
     {
         $this->roles = ['ROLE_USER'];
+        $this->apiToken = bin2hex(random_bytes(32));
     }
 
     public function getId(): ?int
@@ -151,6 +158,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->verificationCodeExpiresAt = $verificationCodeExpiresAt;
 
         return $this;
+    }
+
+    public function getApiToken(): ?string
+    {
+        return $this->apiToken;
     }
 
     #[ORM\PrePersist]

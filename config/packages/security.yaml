@@ -11,6 +11,12 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            access_token:
+                token_handler: App\Security\ApiTokenHandler
         main:
             lazy: true
             provider: app_user_provider
@@ -24,6 +30,7 @@ security:
                 target: app_login
 
     access_control:
+        - { path: ^/api, roles: ROLE_USER }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
