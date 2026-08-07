@@ -1,0 +1,55 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Tasks</h1>
+    <a href="{{ path('app_task_new') }}" class="btn btn-primary">New Task</a>
+</div>
+
+{% if tasks is empty %}
+    <div class="text-center py-5">
+        <p class="text-muted">No tasks yet. <a href="{{ path('app_task_new') }}">Create your first task</a>.</p>
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for task in tasks %}
+                <tr>
+                    <td>
+                        <a href="{{ path('app_task_show', {id: task.id}) }}">
+                            {{ task.title }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ task.status.value == 'done' ? 'success' : task.status.value == 'in_progress' ? 'warning' : 'secondary' }}">
+                            {{ task.status.value|replace({'_': ' '})|title }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ task.priority.value == 'high' ? 'danger' : task.priority.value == 'medium' ? 'warning text-dark' : 'secondary' }}">
+                            {{ task.priority.value|title }}
+                        </span>
+                    </td>
+                    <td>{{ task.dueDate ? task.dueDate|date('M d, Y') : '—' }}</td>
+                    <td class="text-end">
+                        <a href="{{ path('app_task_edit', {id: task.id}) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
